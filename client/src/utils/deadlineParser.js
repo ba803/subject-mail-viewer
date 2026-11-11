@@ -135,6 +135,40 @@ export function getTimeRemaining(deadlineDate) {
   };
 }
 
+export function parseDateTimeString(rawStr) {
+  if (!rawStr) return null;
+  const trimmed = rawStr.trim().replace(/^[.,;:\s]+|[.,;:\s]+$/g, '');
+
+  const timeRegexPart = `(?:\\d{1,2}[:.]\\d{2}\\s*(?:[apAP][mM])?|\\d{1,2}\\s*[apAP][mM])`;
+  const dateRegexPart = `(?:\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4})`;
+
+  // Pattern A: [time] - [date]  e.g. 01.00 PM - 12.11.2026 (Official college pattern)
+  const timeDatePattern = new RegExp(`^(${timeRegexPart})\\s*[-–@,]\\s*(${dateRegexPart})`, 'i');
+  const tdMatch = trimmed.match(timeDatePattern);
+  if (tdMatch) {
+    return {
+      timePart: tdMatch[1].trim(),
+      datePart: tdMatch[2].trim(),
+      rawDeadline: `${tdMatch[1].trim()} - ${tdMatch[2].trim()}`,
+      order: 'time-date'
+    };
+  }
+
+  // Pattern B: [date] - [time]  e.g. 12.11.2026 - 01.00 PM
+  const dateTimePattern = new RegExp(`^(${dateRegexPart})(?:\\s*[-–@,]\\s*(${timeRegexPart}))?`, 'i');
+  const dtMatch = trimmed.match(dateTimePattern);
+  if (dtMatch) {
+    return {
+      datePart: dtMatch[1].trim(),
+      timePart: dtMatch[2] ? dtMatch[2].trim() : '',
+      rawDeadline: dtMatch[2] ? `${dtMatch[1].trim()} - ${dtMatch[2].trim()}` : dtMatch[1].trim(),
+      order: 'date-time'
+    };
+  }
+
+  return null;
+}
+
 export function extractRegistrationDeadline(message) {
   if (!message) return null;
 
@@ -142,43 +176,52 @@ export function extractRegistrationDeadline(message) {
   const rawHtml = message.htmlBody ? message.htmlBody.replace(/<[^>]*>/g, ' ') : '';
   const fullText = `${rawText}\n${rawHtml}`;
 
-  // Pattern 1: Registration: ... on or before 12.11.2026 - 01.00 PM
-  const regPattern1 = /(?:registration|register)\s*[:\-]?\s*([^\n\r]*?(?:on or before|before|by|till|until)\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
-  
-  // Pattern 2: Last date for registration / End date for applying: 12.11.2026 - 01.00 PM
-  const regPattern2 = /((?:last date|end date|deadline|apply before|registration deadline|application deadline)\s*(?:for registration|to apply|to register|for applying|of registration)?\s*[:\-]?\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+  const timeDateChunk = `(?:\\d{1,2}[:.]\\d{2}\\s*[apAP][mM]|\\d{1,2}\\s*[apAP][mM]|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4})\\s*[-–@,]\\s*(?:\\d{1,2}[:.]\\d{2}\\s*[apAP][mM]|\\d{1,2}\\s*[apAP][mM]|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4})|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4}`;
 
-  // Pattern 3: general on or before
-  const regPattern3 = /((?:[^\n\r]*?register[^\n\r]*?)?on or before\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+  // 1. Target exact placement link pattern: "Placement link below on or before [time] - [date]"
+  const patternPlacementLink = new RegExp(
+    `([^\n\r]*?(?:placement link|below link|below two links|links? below|registration|register)[^\n\r]*?on or before\\s*(${timeDateChunk})[^\n\r]*)`,
+    'i'
+  );
 
-  let match = fullText.match(regPattern1) || fullText.match(regPattern2) || fullText.match(regPattern3);
+  // 2. Generic "on or before"
+  const patternGeneric = new RegExp(
+    `([^\n\r]*?on or before\\s*(${timeDateChunk})[^\n\r]*)`,
+    'i'
+  );
 
-  let instruction = '';
-  let rawDeadline = '';
+  // 3. "Last date / End date / deadline"
+  const patternLastDate = new RegExp(
+    `((?:last date|end date|deadline|apply before)[^\n\r]*?[:\\-]?\\s*(${timeDateChunk})[^\n\r]*)`,
+    'i'
+  );
+
+  const match = fullText.match(patternPlacementLink) || fullText.match(patternGeneric) || fullText.match(patternLastDate);
+
+  let rawInstruction = '';
+  let rawChunk = '';
 
   if (match) {
-    instruction = match[1].trim();
-    rawDeadline = match[2].trim();
+    rawInstruction = match[1].trim();
+    rawChunk = match[2].trim();
   } else if (message.registrationDeadline) {
-    rawDeadline = message.registrationDeadline;
-    instruction = message.registrationInstruction || `Register on or before ${rawDeadline}`;
+    rawChunk = message.registrationDeadline;
+    rawInstruction = message.registrationInstruction || `Placement link below on or before ${rawChunk}`;
   } else {
     return null;
   }
 
-  const dMatch = rawDeadline.match(/^([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4})(?:\s*[-–@,]\s*([0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?))?/);
-  if (!dMatch) return null;
+  const parsedDT = parseDateTimeString(rawChunk);
+  if (!parsedDT) return null;
 
-  const datePart = dMatch[1];
-  const timePart = dMatch[2] || '';
-  const parsedDate = parseDeadlineDate(datePart, timePart);
+  const parsedDate = parseDeadlineDate(parsedDT.datePart, parsedDT.timePart);
   const remaining = getTimeRemaining(parsedDate);
 
   return {
-    instruction,
-    rawDeadline,
-    datePart,
-    timePart,
+    instruction: rawInstruction,
+    rawDeadline: parsedDT.rawDeadline,
+    datePart: parsedDT.datePart,
+    timePart: parsedDT.timePart,
     parsedDate,
     remaining
   };

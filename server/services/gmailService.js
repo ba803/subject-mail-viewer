@@ -397,23 +397,81 @@ class GmailService {
   }
 
   /**
+   * Parse DateTime string in either [time] - [date] or [date] - [time] order
+   */
+  parseDateTimeString(rawStr) {
+    if (!rawStr) return null;
+    const trimmed = rawStr.trim().replace(/^[.,;:\s]+|[.,;:\s]+$/g, '');
+
+    const timeRegexPart = `(?:\\d{1,2}[:.]\\d{2}\\s*(?:[apAP][mM])?|\\d{1,2}\\s*[apAP][mM])`;
+    const dateRegexPart = `(?:\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4})`;
+
+    // Pattern A: [time] - [date]  e.g. 01.00 PM - 12.11.2026 (Official college placement pattern)
+    const timeDatePattern = new RegExp(`^(${timeRegexPart})\\s*[-–@,]\\s*(${dateRegexPart})`, 'i');
+    const tdMatch = trimmed.match(timeDatePattern);
+    if (tdMatch) {
+      return {
+        timePart: tdMatch[1].trim(),
+        datePart: tdMatch[2].trim(),
+        rawDeadline: `${tdMatch[1].trim()} - ${tdMatch[2].trim()}`,
+        order: 'time-date'
+      };
+    }
+
+    // Pattern B: [date] - [time]  e.g. 12.11.2026 - 01.00 PM
+    const dateTimePattern = new RegExp(`^(${dateRegexPart})(?:\\s*[-–@,]\\s*(${timeRegexPart}))?`, 'i');
+    const dtMatch = trimmed.match(dateTimePattern);
+    if (dtMatch) {
+      return {
+        datePart: dtMatch[1].trim(),
+        timePart: dtMatch[2] ? dtMatch[2].trim() : '',
+        rawDeadline: dtMatch[2] ? `${dtMatch[1].trim()} - ${dtMatch[2].trim()}` : dtMatch[1].trim(),
+        order: 'date-time'
+      };
+    }
+
+    return null;
+  }
+
+  /**
    * Automatically extracts Registration Deadline & Instruction from placement emails
+   * Targets pattern: "Placement link below on or before [time] - [date]"
    */
   extractRegistrationDeadline(textBody = '', htmlBody = '', snippet = '') {
     const rawText = `${textBody || ''}\n${snippet || ''}`;
     const rawHtml = htmlBody ? htmlBody.replace(/<[^>]*>/g, ' ') : '';
     const fullText = `${rawText}\n${rawHtml}`;
 
-    const regPattern1 = /(?:registration|register)\s*[:\-]?\s*([^\n\r]*?(?:on or before|before|by|till|until)\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
-    const regPattern2 = /((?:last date|end date|deadline|apply before|registration deadline|application deadline)\s*(?:for registration|to apply|to register|for applying|of registration)?\s*[:\-]?\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
-    const regPattern3 = /((?:[^\n\r]*?register[^\n\r]*?)?on or before\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+    const timeDateChunk = `(?:\\d{1,2}[:.]\\d{2}\\s*[apAP][mM]|\\d{1,2}\\s*[apAP][mM]|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4})\\s*[-–@,]\\s*(?:\\d{1,2}[:.]\\d{2}\\s*[apAP][mM]|\\d{1,2}\\s*[apAP][mM]|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4})|\\d{1,2}[./-]\\d{1,2}[./-]\\d{2,4}`;
 
-    const match = fullText.match(regPattern1) || fullText.match(regPattern2) || fullText.match(regPattern3);
+    // 1. Target exact placement link pattern: "Placement link below on or before [time] - [date]"
+    const patternPlacementLink = new RegExp(
+      `([^\n\r]*?(?:placement link|below link|below two links|links? below|registration|register)[^\n\r]*?on or before\\s*(${timeDateChunk})[^\n\r]*)`,
+      'i'
+    );
+
+    // 2. Generic "on or before"
+    const patternGeneric = new RegExp(
+      `([^\n\r]*?on or before\\s*(${timeDateChunk})[^\n\r]*)`,
+      'i'
+    );
+
+    // 3. "Last date / End date / deadline"
+    const patternLastDate = new RegExp(
+      `((?:last date|end date|deadline|apply before)[^\n\r]*?[:\\-]?\\s*(${timeDateChunk})[^\n\r]*)`,
+      'i'
+    );
+
+    const match = fullText.match(patternPlacementLink) || fullText.match(patternGeneric) || fullText.match(patternLastDate);
     if (!match) return null;
 
+    const rawInstruction = match[1].trim();
+    const rawChunk = match[2].trim();
+    const parsedDT = this.parseDateTimeString(rawChunk);
+
     return {
-      instruction: match[1].trim(),
-      deadline: match[2].trim()
+      instruction: rawInstruction,
+      deadline: parsedDT ? parsedDT.rawDeadline : rawChunk
     };
   }
 

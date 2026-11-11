@@ -71,7 +71,7 @@ Internship Stipend  : 15 k/month
 CTC                 : 5.5 LPA - 7.0 LPA
 
 Registration:
-All the eligible & interested students are requested to register in the below two links on or before 14.11.2026 - 01.00 PM.
+All the eligible & interested students are requested to register in the Placement link below on or before 01.00 PM - 14.11.2026.
 
 Registration Links:
 Placement link: https://placement.sathyabama.ac.in/apply/crmit-2027
@@ -95,7 +95,7 @@ Sathyabama Institute of Science and Technology`,
 <strong>CTC:</strong> 5.5 LPA - 7.0 LPA</p>
 <p style="background: #fef3c7; padding: 10px; border-left: 4px solid #f59e0b; border-radius: 4px;">
 <strong>Registration:</strong><br/>
-All the eligible & interested students are requested to register in the below two links on or before 14.11.2026 - 01.00 PM.
+All the eligible & interested students are requested to register in the Placement link below on or before 01.00 PM - 14.11.2026.
 </p>
 <p>Placement link: <a href="https://placement.sathyabama.ac.in/apply/crmit-2027">https://placement.sathyabama.ac.in/apply/crmit-2027</a><br/>
 Visit: <a href="https://neopat.in/login">https://neopat.in/login</a><br/>
@@ -151,7 +151,7 @@ Internship Stipend  : 10 k/month
 CTC                 : 3.6 LPA
 
 Registration:
-All the eligible & interested students are requested to register in the below two links on or before 13.11.2026 - 05.00 PM.
+All the eligible & interested students are requested to register in the Placement link below on or before 05.00 PM - 13.11.2026.
 
 Links:
 Company link: https://trikaaltech.com
@@ -165,7 +165,7 @@ Visit: https://neopat.in/student`,
 <strong>CTC:</strong> 3.6 LPA</p>
 <p style="background: #fef3c7; padding: 10px; border-left: 4px solid #f59e0b; border-radius: 4px;">
 <strong>Registration:</strong><br/>
-All the eligible & interested students are requested to register in the below two links on or before 13.11.2026 - 05.00 PM.
+All the eligible & interested students are requested to register in the Placement link below on or before 05.00 PM - 13.11.2026.
 </p>
 <p>Company link: <a href="https://trikaaltech.com">https://trikaaltech.com</a><br/>
 Placement link: <a href="https://placement.sathyabama.ac.in/trikaal-tech-2027">https://placement.sathyabama.ac.in/trikaal-tech-2027</a><br/>
@@ -217,8 +217,14 @@ Internship Stipend: 12 k/month
 CTC: 4.0 LPA - 6.0 LPA
 
 Registration:
-All the eligible & interested students are requested to register in the below two links on or before 16.11.2026 - 11.59 PM.`,
-    htmlBody: `<p>Online Assessment notice for Hexaware.</p>`,
+All the eligible & interested students are requested to register in the Placement link below on or before 11.59 PM - 16.11.2026.`,
+    htmlBody: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Online Assessment notice for Hexaware.</p>
+<p style="background: #fef3c7; padding: 10px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+<strong>Registration:</strong><br/>
+All the eligible & interested students are requested to register in the Placement link below on or before 11.59 PM - 16.11.2026.
+</p>
+</div>`,
     labels: ['INBOX', 'IMPORTANT']
   },
   {

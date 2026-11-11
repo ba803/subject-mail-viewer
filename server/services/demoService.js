@@ -69,7 +69,7 @@ Internship Stipend  : 15 k/month
 CTC                 : 5.5 LPA - 7.0 LPA
 
 Registration:
-All the eligible & interested students are requested to register in the below two links on or before 14.11.2026 - 01.00 PM.
+All the eligible & interested students are requested to register in the Placement link below on or before 01.00 PM - 14.11.2026.
 
 Registration Links:
 Placement link: https://placement.sathyabama.ac.in/apply/crmit-2027
