@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const express = require('express');
@@ -126,12 +127,26 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve frontend build in production
-if (isProd) {
-  const clientDist = path.join(__dirname, '../client/dist');
+// Frontend serving / API root handler
+const clientDist = path.join(__dirname, '../client/dist');
+const indexHtmlPath = path.join(clientDist, 'index.html');
+
+if (fs.existsSync(indexHtmlPath)) {
   app.use(express.static(clientDist));
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(clientDist, 'index.html'));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(indexHtmlPath);
+  });
+} else {
+  // Frontend is deployed separately on GitHub Pages
+  app.get('/', (req, res) => {
+    res.json({
+      status: 'ok',
+      service: 'Subject Mail Viewer Backend API',
+      frontendUrl: CLIENT_URL,
+      healthCheck: '/api/health',
+      timestamp: new Date().toISOString()
+    });
   });
 }
 
