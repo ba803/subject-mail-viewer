@@ -159,11 +159,13 @@ app.use((err, req, res, next) => {
   });
 });
 
+const HOST = process.env.HOST || '0.0.0.0';
+
 function startServer(portToTry) {
-  const server = app.listen(portToTry, '127.0.0.1', () => {
+  const server = app.listen(portToTry, HOST, () => {
     console.log(`====================================================`);
     console.log(` Subject Mail Viewer Backend`);
-    console.log(` Running on: http://localhost:${portToTry}`);
+    console.log(` Running on: http://${HOST}:${portToTry}`);
     console.log(` Client URL: ${CLIENT_URL}`);
     console.log(` Google OAuth Configured: ${Boolean(process.env.GOOGLE_CLIENT_ID && !process.env.GOOGLE_CLIENT_ID.includes('your_google_client_id'))}`);
     console.log(` Demo Mode: ${process.env.ENABLE_DEMO_MODE === 'true' ? 'Enabled' : 'Disabled'}`);
