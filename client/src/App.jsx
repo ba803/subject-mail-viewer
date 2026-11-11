@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './components/Navbar';
 import GoogleSignInCard from './components/GoogleSignInCard';
 import DashboardPage from './pages/DashboardPage';
 import MessagesPage from './pages/MessagesPage';
 import GroupsPage from './pages/GroupsPage';
 import SettingsPage from './pages/SettingsPage';
-import { authApi } from './services/api';
+import UrgentPage from './pages/UrgentPage';
+import { authApi, mailApi } from './services/api';
+import { extractRegistrationDeadline } from './utils/deadlineParser';
 
 export default function App() {
   const [user, setUser] = useState(() => {
@@ -29,6 +31,34 @@ export default function App() {
   const [activeSubject, setActiveSubject] = useState('Campus Recruitment');
   const [messagesFilters, setMessagesFilters] = useState({});
   const [notification, setNotification] = useState(null);
+  const [urgentCount, setUrgentCount] = useState(0);
+
+  // Update urgent placement drives count for the top navbar badge
+  const updateUrgentCount = useCallback(async () => {
+    if (!user) {
+      setUrgentCount(0);
+      return;
+    }
+    try {
+      const res = await mailApi.search({
+        subject: activeSubject || 'Campus Recruitment',
+        maxResults: 40
+      });
+      if (res.data && Array.isArray(res.data.messages)) {
+        const count = res.data.messages.filter(msg => {
+          const d = extractRegistrationDeadline(msg);
+          return d && d.remaining && !d.remaining.isExpired && d.remaining.daysLeft <= 3;
+        }).length;
+        setUrgentCount(count);
+      }
+    } catch {
+      // Non-blocking
+    }
+  }, [user, activeSubject]);
+
+  useEffect(() => {
+    updateUrgentCount();
+  }, [updateUrgentCount]);
 
   // Check auth state and query params on mount
   useEffect(() => {
@@ -187,6 +217,7 @@ export default function App() {
         setActiveTab={setActiveTab}
         user={user}
         isDemo={isDemo}
+        urgentCount={urgentCount}
         onLogout={handleLogout}
         onDisconnect={handleDisconnect}
       />
@@ -230,6 +261,14 @@ export default function App() {
                 onNavigateToMessages={handleNavigateToMessages}
                 activeSubject={activeSubject}
                 setActiveSubject={setActiveSubject}
+              />
+            )}
+
+            {activeTab === 'urgent' && (
+              <UrgentPage
+                user={user}
+                isDemo={isDemo}
+                onNavigateToMessages={handleNavigateToMessages}
               />
             )}
 

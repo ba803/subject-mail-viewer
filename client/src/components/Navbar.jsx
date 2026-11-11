@@ -9,7 +9,8 @@ import {
   ChevronDown,
   Sparkles,
   ExternalLink,
-  Search
+  Search,
+  Flame
 } from 'lucide-react';
 
 export default function Navbar({ 
@@ -17,6 +18,7 @@ export default function Navbar({
   setActiveTab, 
   user, 
   isDemo, 
+  urgentCount = 0,
   onLogout, 
   onDisconnect 
 }) {
@@ -24,6 +26,7 @@ export default function Navbar({
 
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { id: 'urgent', label: 'Urgent', icon: Flame, badge: urgentCount },
     { id: 'messages', label: 'Messages', icon: Mail },
     { id: 'groups', label: 'Groups', icon: Users },
     { id: 'settings', label: 'Settings', icon: Settings },
@@ -57,18 +60,32 @@ export default function Navbar({
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
+              const isUrgent = item.id === 'urgent';
               return (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center space-x-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-[#e8f0fe] text-[#1A73E8] font-semibold'
+                      ? isUrgent
+                        ? 'bg-red-50 text-red-600 font-semibold'
+                        : 'bg-[#e8f0fe] text-[#1A73E8] font-semibold'
+                      : isUrgent
+                      ? 'text-red-600 hover:bg-red-50/70 hover:text-red-700 font-semibold'
                       : 'text-[#5f6368] hover:bg-[#f1f3f4] hover:text-[#202124]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-[#1A73E8]' : 'text-[#5f6368]'}`} />
+                  <Icon className={`w-4 h-4 ${
+                    isActive 
+                      ? isUrgent ? 'text-red-600' : 'text-[#1A73E8]' 
+                      : isUrgent ? 'text-red-500' : 'text-[#5f6368]'
+                  }`} />
                   <span className="hidden md:inline">{item.label}</span>
+                  {isUrgent && item.badge > 0 && (
+                    <span className="ml-1 px-1.5 py-0.2 text-[10px] font-black bg-red-600 text-white rounded-full animate-pulse shadow-xs">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

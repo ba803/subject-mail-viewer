@@ -267,6 +267,22 @@ export default function MessageModal({ message, onClose }) {
     return extractEligibilityCriteria(message);
   }, [message]);
 
+  const companyName = useMemo(() => {
+    if (eligibilityCriteria?.['Company Name']) return eligibilityCriteria['Company Name'];
+    const subj = message.subject || '';
+    const match = subj.match(/(?:Notification|Drive|Recruitment)\s*[:|–-]?\s*([^|\n-]+)/i) ||
+                  subj.match(/\|\s*([^|\n]+?)(?:\s*\||\s*Campus|\s*Registration|$)/i);
+    if (match && match[1].trim()) return match[1].trim();
+    return 'Campus Recruitment';
+  }, [eligibilityCriteria, message.subject]);
+
+  const venue = eligibilityCriteria?.['Venue'];
+  const branches = eligibilityCriteria?.['Eligible branches'] || eligibilityCriteria?.['Eligible Branches'] || eligibilityCriteria?.['Branches Eligible'];
+  const eligibility = eligibilityCriteria?.['Eligibility'] || eligibilityCriteria?.['Eligibility Criteria'];
+  const stipend = eligibilityCriteria?.['Internship Stipend'] || eligibilityCriteria?.['Stipend'];
+  const ctc = eligibilityCriteria?.['CTC'] || eligibilityCriteria?.['Package'] || eligibilityCriteria?.['Salary'];
+  const role = eligibilityCriteria?.['Role'] || eligibilityCriteria?.['Job Role'] || eligibilityCriteria?.['Designation'];
+
   // 2. Extract Links
   const extractedLinks = useMemo(() => {
     return extractLinksFromMessage(message);
@@ -382,365 +398,202 @@ export default function MessageModal({ message, onClose }) {
         )}
 
         {/* Modal Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#f8f9fa] space-y-6">
 
           {/* ========================================================= */}
-          {/* END DATE FOR APPLYING / REGISTRATION DEADLINE (CRITICAL) */}
+          {/* USER PREFERRED OFFICIAL PLACEMENT NOTIFICATION TEMPLATE */}
           {/* ========================================================= */}
-          {deadlineInfo && (
-            <div className={`p-3.5 sm:p-4 rounded-2xl border-2 shadow-xs transition-all flex flex-wrap items-center justify-between gap-3 ${
-              deadlineInfo.remaining.color === 'red'
-                ? 'bg-gradient-to-r from-red-50 via-rose-50/70 to-white border-red-300 text-red-950'
-                : deadlineInfo.remaining.color === 'amber'
-                ? 'bg-gradient-to-r from-amber-50 via-orange-50/60 to-white border-amber-300 text-amber-950'
-                : 'bg-gradient-to-r from-emerald-50 via-teal-50/60 to-white border-emerald-300 text-emerald-950'
-            }`}>
-              <div className="flex items-center space-x-3.5 min-w-0">
-                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center font-bold shadow-xs shrink-0 ${
-                  deadlineInfo.remaining.color === 'red'
-                    ? 'bg-red-200/90 text-red-800'
-                    : deadlineInfo.remaining.color === 'amber'
-                    ? 'bg-amber-200/90 text-amber-900'
-                    : 'bg-emerald-200/90 text-emerald-900'
-                }`}>
-                  <Clock className="w-5 h-5 animate-pulse" />
-                </div>
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider block opacity-75">
-                    End Date &amp; Time for Applying
-                  </span>
-                  <span className="text-base sm:text-lg font-black tracking-tight">
-                    {deadlineInfo.rawDeadline}
-                  </span>
-                </div>
-              </div>
+          <div className="bg-white rounded-3xl border border-[#dadce0] p-6 sm:p-8 shadow-xs text-sm sm:text-base leading-relaxed text-[#202124]">
+            
+            {/* Introductory Line */}
+            <p className="font-semibold text-gray-800 text-base sm:text-lg mb-4">
+              Campus Recruitment Notification from <strong className="font-bold text-gray-900">{companyName}</strong>.
+            </p>
 
-              {/* Dynamic Countdown Badge (e.g. "Only 2 days left") */}
-              <div className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-black shadow-xs tracking-wide shrink-0 ${
-                deadlineInfo.remaining.color === 'red'
-                  ? 'bg-red-600 text-white'
-                  : deadlineInfo.remaining.color === 'amber'
-                  ? 'bg-amber-500 text-white ring-2 ring-amber-300 animate-pulse'
-                  : 'bg-emerald-600 text-white'
-              }`}>
-                <span className="mr-1.5 text-sm">⏳</span>
-                {deadlineInfo.remaining.text}
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* 1. ELIGIBILITY CRITERIA (PRIMARY SECTION) */}
-          {/* ========================================================= */}
-          <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                <Award className="w-4 h-4" />
-              </div>
-              <h3 className="text-base font-bold text-[#202124]">
-                1. Eligibility Criteria
-              </h3>
+            {/* Key Criteria Details (Clean Document Format) */}
+            <div className="space-y-1.5 font-normal text-gray-800 mb-5">
+              <p><strong className="font-bold text-gray-900">Company Name:</strong> {companyName}</p>
+              {venue && venue !== 'Will be Communicated Later' && (
+                <p><strong className="font-bold text-gray-900">Venue:</strong> {venue}</p>
+              )}
+              {branches && (
+                <p><strong className="font-bold text-gray-900">Eligible branches:</strong> {branches}</p>
+              )}
+              {eligibility && (
+                <p><strong className="font-bold text-gray-900">Eligibility:</strong> {eligibility}</p>
+              )}
+              {stipend && (
+                <p><strong className="font-bold text-gray-900">Internship Stipend:</strong> {stipend}</p>
+              )}
+              {ctc && (
+                <p><strong className="font-bold text-gray-900">CTC:</strong> {ctc}</p>
+              )}
+              {role && (
+                <p><strong className="font-bold text-gray-900">Role:</strong> {role}</p>
+              )}
             </div>
 
-            {eligibilityCriteria ? (
-              <div className="bg-gradient-to-br from-emerald-50/40 via-white to-gray-50 rounded-2xl border-2 border-emerald-200 p-4 sm:p-5 shadow-xs">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Company Name */}
-                  {eligibilityCriteria['Company Name'] && (
-                    <div className="md:col-span-2 flex items-start space-x-3 p-3 bg-white rounded-xl border border-emerald-100 shadow-2xs">
-                      <Building2 className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Company Name</span>
-                        <span className="text-base font-bold text-[#202124]">{eligibilityCriteria['Company Name']}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Venue */}
-                  {eligibilityCriteria['Venue'] && (
-                    <div className="md:col-span-2 flex items-start space-x-3 p-3 bg-white rounded-xl border border-gray-200">
-                      <MapPin className="w-4 h-4 text-rose-500 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Venue</span>
-                        <span className="text-sm font-semibold text-gray-800">{eligibilityCriteria['Venue']}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Eligible Branches */}
-                  {eligibilityCriteria['Eligible branches'] && (
-                    <div className="md:col-span-2 flex items-start space-x-3 p-3 bg-white rounded-xl border border-purple-100">
-                      <GraduationCap className="w-5 h-5 text-[#673AB7] flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[11px] font-bold text-[#673AB7] uppercase tracking-wider block">Eligible Branches</span>
-                        <span className="text-sm font-bold text-gray-900">{eligibilityCriteria['Eligible branches']}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Academic Eligibility */}
-                  {eligibilityCriteria['Eligibility'] && (
-                    <div className="md:col-span-2 p-3 bg-amber-50/60 rounded-xl border border-amber-200">
-                      <span className="text-[11px] font-bold text-amber-900 uppercase tracking-wider block mb-1">
-                        Academic Eligibility & Criteria
-                      </span>
-                      <p className="text-xs sm:text-sm font-medium text-amber-950 whitespace-pre-wrap leading-relaxed">
-                        {eligibilityCriteria['Eligibility']}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Internship Stipend */}
-                  {eligibilityCriteria['Internship Stipend'] && (
-                    <div className="flex items-start space-x-3 p-3 bg-white rounded-xl border border-gray-200">
-                      <Banknote className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Internship Stipend</span>
-                        <span className="text-sm font-bold text-emerald-700">{eligibilityCriteria['Internship Stipend']}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CTC */}
-                  {eligibilityCriteria['CTC'] && (
-                    <div className="flex items-start space-x-3 p-3 bg-white rounded-xl border border-gray-200">
-                      <Briefcase className="w-4 h-4 text-[#1A73E8] flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">CTC / Package</span>
-                        <span className="text-sm font-bold text-[#1A73E8]">{eligibilityCriteria['CTC']}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Role */}
-                  {eligibilityCriteria['Role'] && (
-                    <div className="md:col-span-2 flex items-start space-x-3 p-3 bg-white rounded-xl border border-gray-200">
-                      <Briefcase className="w-4 h-4 text-gray-600 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">Role / Designation</span>
-                        <span className="text-sm font-semibold text-gray-800">{eligibilityCriteria['Role']}</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+            {/* Registration Highlight Box (Warm Yellow Container with Orange Left Border) */}
+            <div className="bg-[#fef3c7] p-4 sm:p-5 rounded-r-2xl rounded-l-md border-l-4 border-[#f59e0b] shadow-2xs mb-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-1.5">
+                <strong className="font-bold text-gray-950 text-sm sm:text-base">Registration:</strong>
+                {deadlineInfo?.remaining && (
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-black shadow-xs ${
+                    deadlineInfo.remaining.color === 'red'
+                      ? 'bg-red-600 text-white'
+                      : deadlineInfo.remaining.color === 'amber'
+                      ? 'bg-amber-500 text-white ring-2 ring-amber-300 animate-pulse'
+                      : 'bg-emerald-600 text-white'
+                  }`}>
+                    <span className="mr-1">⏳</span>
+                    {deadlineInfo.remaining.text}
+                  </span>
+                )}
               </div>
-            ) : (
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-2xl text-xs text-gray-600">
-                No structured eligibility criteria table detected in this email. You can expand the original email body below.
+              <p className="text-sm sm:text-base text-gray-900 font-medium leading-relaxed">
+                All the eligible &amp; interested students are requested to register in the Placement link below on or before{' '}
+                <strong className="font-black text-gray-950 underline decoration-amber-500 decoration-2">
+                  {deadlineInfo?.rawDeadline || 'the closing deadline'}
+                </strong>.
+              </p>
+            </div>
+
+            {/* Links Section */}
+            {extractedLinks.length > 0 && (
+              <div className="space-y-2 mb-5">
+                {extractedLinks.map((item, idx) => (
+                  <div key={idx} className="flex items-center space-x-2 text-sm sm:text-base flex-wrap">
+                    <strong className="font-bold text-gray-900">{item.label}:</strong>
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#1A73E8] underline hover:text-blue-800 break-all font-medium inline-flex items-center"
+                    >
+                      <span>{item.url}</span>
+                      <ExternalLink className="w-3.5 h-3.5 ml-1 shrink-0" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink(item.url, idx)}
+                      className="p-1 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded transition"
+                      title="Copy link"
+                    >
+                      {copiedLinkIdx === idx ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
-          </div>
 
-          {/* ========================================================= */}
-          {/* SPECIAL RULE: NeoPat / NeoPad Registration Notice */}
-          {/* ========================================================= */}
-          {requiresNeoPatRegistration && (
-            <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 text-amber-950 flex items-start space-x-3 shadow-xs animate-in fade-in">
-              <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h4 className="font-bold text-sm text-amber-900 flex items-center">
-                  <span>Action Required: Please Register in the NeoPat (NeoPad) App</span>
-                  <span className="ml-2 px-2 py-0.5 bg-amber-200 text-amber-900 rounded-full text-[10px] font-bold uppercase">
-                    Mandatory
-                  </span>
-                </h4>
-                <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                  This campus recruitment drive has both a <strong>Placement Link</strong> and a <strong>Visit Link</strong>. Please ensure you open the <strong>NeoPat (NeoPad) app</strong> and complete your online registration and profile verification before the drive closing date.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================= */}
-          {/* 2. LINKS SECTION */}
-          {/* ========================================================= */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 rounded-lg bg-blue-100 text-[#1A73E8] flex items-center justify-center">
-                  <Link2 className="w-4 h-4" />
+            {/* NeoPat Notice if both placement & visit links exist */}
+            {requiresNeoPatRegistration && (
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl text-xs sm:text-sm text-amber-950 flex items-start space-x-2.5 mb-5">
+                <span className="text-base shrink-0">⚠️</span>
+                <div>
+                  <strong className="font-bold">NeoPat App Registration Required:</strong> This drive has both a Placement Link and a Visit Link. Please ensure you open the <strong>NeoPat (NeoPad) app</strong> and complete your online registration and profile verification before the drive closing date.
                 </div>
-                <h3 className="text-base font-bold text-[#202124]">
-                  2. Links ({extractedLinks.length})
-                </h3>
               </div>
-              <span className="text-xs text-[#5f6368]">
-                Auto-extracted with labels
-              </span>
-            </div>
+            )}
 
-            {extractedLinks.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {extractedLinks.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-start justify-between p-3.5 rounded-2xl border border-[#dadce0] bg-[#f8fafd] hover:bg-white hover:border-[#1A73E8] transition group shadow-xs"
-                  >
-                    <div className="min-w-0 flex-1 pr-2">
-                      <div className="flex items-center space-x-1.5 mb-1">
-                        <span className="text-[11px] font-bold text-[#1A73E8] uppercase tracking-wider bg-blue-100/70 text-[#1A73E8] px-2 py-0.5 rounded-md border border-blue-200 truncate">
-                          {item.label}
-                        </span>
+            {/* Attachments Section (if any) */}
+            {message.attachments && message.attachments.length > 0 && (
+              <div className="pt-4 border-t border-gray-200 mb-5">
+                <span className="text-xs font-bold uppercase tracking-wider text-gray-500 block mb-2">
+                  Attachments ({message.attachments.length})
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {message.attachments.map((att, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl border border-gray-200 bg-gray-50 hover:bg-white transition text-xs">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <FileText className="w-4 h-4 text-[#1A73E8] shrink-0" />
+                        <span className="truncate font-medium text-gray-800" title={att.filename}>{att.filename}</span>
                       </div>
-                      <p className="text-xs text-gray-700 font-mono truncate" title={item.url}>
-                        {item.url}
-                      </p>
-                    </div>
-
-                    <div className="flex items-center space-x-1 flex-shrink-0 mt-0.5">
                       <button
                         type="button"
-                        onClick={() => handleCopyLink(item.url, idx)}
-                        className="p-1.5 text-gray-400 hover:text-[#1A73E8] hover:bg-blue-50 rounded-lg transition"
-                        title="Copy link to clipboard"
+                        onClick={() => handleDownload(att)}
+                        className="p-1.5 text-[#1A73E8] hover:bg-blue-50 rounded-lg transition shrink-0 ml-2"
+                        title="Download file"
                       >
-                        {copiedLinkIdx === idx ? (
-                          <Check className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : (
-                          <Copy className="w-3.5 h-3.5" />
-                        )}
+                        <Download className="w-3.5 h-3.5" />
                       </button>
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="p-1.5 text-[#1A73E8] hover:bg-blue-100 rounded-lg transition"
-                        title="Open in new tab"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            ) : (
-              <p className="text-xs text-gray-500 italic bg-gray-50 p-3 rounded-xl">
-                No external links detected in this email.
-              </p>
             )}
-          </div>
 
-          {/* ========================================================= */}
-          {/* 3. ATTACHMENTS SECTION */}
-          {/* ========================================================= */}
-          <div>
-            <div className="flex items-center space-x-2 mb-3">
-              <div className="w-7 h-7 rounded-lg bg-purple-100 text-[#673AB7] flex items-center justify-center">
-                <Paperclip className="w-4 h-4" />
-              </div>
-              <h3 className="text-base font-bold text-[#202124]">
-                3. Attachments ({message.attachments ? message.attachments.length : 0})
-              </h3>
-            </div>
+            {/* ========================================================= */}
+            {/* IN LAST: FULL ORIGINAL EMAIL MESSAGE */}
+            {/* ========================================================= */}
+            <div className="pt-5 border-t border-gray-200 mt-6">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <button
+                  type="button"
+                  onClick={() => setShowRawBody(!showRawBody)}
+                  className="flex items-center space-x-2 text-xs sm:text-sm font-bold text-[#1A73E8] hover:text-blue-800 transition py-2 px-3.5 rounded-xl hover:bg-blue-50 border border-blue-200 shadow-2xs"
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>{showRawBody ? 'Hide Full Original Email' : 'View Full Original Email Body'}</span>
+                  {showRawBody ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
 
-            {message.attachments && message.attachments.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {message.attachments.map((att, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center justify-between p-3.5 rounded-2xl border border-[#dadce0] bg-[#f8fafd] hover:bg-white hover:border-[#1A73E8] transition group shadow-xs"
-                  >
-                    <div className="flex items-center space-x-3 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-blue-100 text-[#1A73E8] flex items-center justify-center flex-shrink-0">
-                        <FileText className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-semibold text-[#202124] truncate" title={att.filename}>
-                          {att.filename}
-                        </p>
-                        <p className="text-[11px] text-[#5f6368]">
-                          {formatFileSize(att.size)} &bull; {att.mimeType}
-                        </p>
-                      </div>
-                    </div>
-
+                {showRawBody && (
+                  <div className="flex items-center space-x-2">
                     <button
                       type="button"
-                      onClick={() => handleDownload(att)}
-                      className="p-2 text-[#1A73E8] hover:bg-blue-50 rounded-xl transition ml-2 flex-shrink-0"
-                      title="Download file"
+                      onClick={() => {
+                        navigator.clipboard.writeText(textContent || htmlPlainText);
+                        setCopiedBody(true);
+                        setTimeout(() => setCopiedBody(false), 2000);
+                      }}
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-2xs"
+                      title="Copy full email text"
                     >
-                      <Download className="w-4 h-4" />
+                      {copiedBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                      <span>{copiedBody ? 'Copied' : 'Copy Text'}</span>
                     </button>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-gray-500 italic bg-gray-50 p-3 rounded-xl">
-                No attachments attached to this message.
-              </p>
-            )}
-          </div>
 
-          {/* ========================================================= */}
-          {/* FULL ORIGINAL EMAIL BODY (TOGGLEABLE & EXPANDABLE) */}
-          {/* ========================================================= */}
-          <div className="pt-2 border-t border-[#dadce0]">
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <button
-                type="button"
-                onClick={() => setShowRawBody(!showRawBody)}
-                className="flex items-center space-x-2 text-xs sm:text-sm font-bold text-[#1A73E8] hover:text-blue-800 transition py-1.5 px-3 rounded-lg hover:bg-blue-50 border border-blue-200"
-              >
-                <FileText className="w-4 h-4" />
-                <span>{showRawBody ? 'Hide Full Original Email' : 'View Full Original Email Body'}</span>
-                {showRawBody ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
+                    <div className="inline-flex rounded-lg border border-gray-300 p-0.5 bg-white text-xs shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => setRawViewMode('html')}
+                        className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                          rawViewMode === 'html' ? 'bg-[#1A73E8] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Formatted (HTML)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setRawViewMode('text')}
+                        className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                          rawViewMode === 'text' ? 'bg-[#1A73E8] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                        }`}
+                      >
+                        Plain Text
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {showRawBody && (
-                <div className="flex items-center space-x-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigator.clipboard.writeText(textContent || htmlPlainText);
-                      setCopiedBody(true);
-                      setTimeout(() => setCopiedBody(false), 2000);
-                    }}
-                    className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-2xs"
-                    title="Copy full email text"
-                  >
-                    {copiedBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedBody ? 'Copied' : 'Copy Text'}</span>
-                  </button>
-
-                  <div className="inline-flex rounded-lg border border-gray-300 p-0.5 bg-white text-xs shadow-2xs">
-                    <button
-                      type="button"
-                      onClick={() => setRawViewMode('html')}
-                      className={`px-2.5 py-1 rounded-md font-semibold transition ${
-                        rawViewMode === 'html' ? 'bg-[#1A73E8] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Formatted (HTML)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setRawViewMode('text')}
-                      className={`px-2.5 py-1 rounded-md font-semibold transition ${
-                        rawViewMode === 'text' ? 'bg-[#1A73E8] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
-                      }`}
-                    >
-                      Plain Text
-                    </button>
-                  </div>
+                <div className="p-4 sm:p-5 bg-[#f8f9fa] border border-gray-200 rounded-2xl animate-in fade-in">
+                  {rawViewMode === 'html' && (htmlContent.length > 0) ? (
+                    <div 
+                      className="email-content-view bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-xs overflow-auto max-h-[600px]"
+                      dangerouslySetInnerHTML={{ __html: htmlContent }} 
+                    />
+                  ) : (
+                    <pre className="text-xs sm:text-sm font-mono whitespace-pre-wrap text-gray-900 leading-relaxed overflow-auto max-h-[600px] bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-xs">
+                      {textContent || '(No email body content available)'}
+                    </pre>
+                  )}
                 </div>
               )}
             </div>
 
-            {showRawBody && (
-              <div className="mt-3 p-4 sm:p-5 bg-[#f8f9fa] border border-gray-200 rounded-2xl animate-in fade-in">
-                {rawViewMode === 'html' && (htmlContent.length > 0) ? (
-                  <div 
-                    className="email-content-view bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-xs overflow-auto max-h-[600px]"
-                    dangerouslySetInnerHTML={{ __html: htmlContent }} 
-                  />
-                ) : (
-                  <pre className="text-xs sm:text-sm font-mono whitespace-pre-wrap text-gray-900 leading-relaxed overflow-auto max-h-[600px] bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-xs">
-                    {textContent || '(No email body content available)'}
-                  </pre>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
