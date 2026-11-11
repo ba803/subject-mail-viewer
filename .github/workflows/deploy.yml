@@ -45,7 +45,7 @@ jobs:
       - name: Build Frontend with Vite
         working-directory: ./client
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL || '' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || vars.VITE_API_URL || 'https://subject-mail-viewer.onrender.com' }}
           VITE_BASE_PATH: './'
         run: |
           npm run build

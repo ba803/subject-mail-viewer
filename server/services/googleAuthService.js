@@ -21,8 +21,20 @@ class GoogleAuthService {
     );
   }
 
+  getRedirectUri(customRedirectUri) {
+    if (customRedirectUri) return customRedirectUri;
+    if (process.env.GOOGLE_REDIRECT_URI) return process.env.GOOGLE_REDIRECT_URI;
+    if (process.env.RENDER_EXTERNAL_URL) {
+      return `${process.env.RENDER_EXTERNAL_URL.replace(/\/+$/, '')}/api/auth/callback`;
+    }
+    if (process.env.NODE_ENV === 'production') {
+      return 'https://subject-mail-viewer.onrender.com/api/auth/callback';
+    }
+    return this.redirectUri || 'http://localhost:5050/api/auth/callback';
+  }
+
   getOAuth2Client(customRedirectUri) {
-    const redirect = customRedirectUri || process.env.GOOGLE_REDIRECT_URI || this.redirectUri;
+    const redirect = this.getRedirectUri(customRedirectUri);
     return new google.auth.OAuth2(
       process.env.GOOGLE_CLIENT_ID,
       process.env.GOOGLE_CLIENT_SECRET,

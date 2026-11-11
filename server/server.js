@@ -12,7 +12,8 @@ const mailRoutes = require('./routes/mailRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5050;
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
+const isProd = process.env.NODE_ENV === 'production';
+const CLIENT_URL = process.env.CLIENT_URL || (isProd ? 'https://ba803.github.io/subject-mail-viewer' : 'http://localhost:5173');
 
 // Trust reverse proxy (essential for production deployments behind Render, Railway, Fly.io, etc.)
 app.set('trust proxy', 1);
@@ -32,6 +33,8 @@ app.use(morgan('dev'));
 const allowedOrigins = [
   'http://localhost:5173',
   'http://127.0.0.1:5173',
+  'https://ba803.github.io',
+  'https://subject-mail-viewer.onrender.com'
 ];
 
 if (CLIENT_URL) {
@@ -70,7 +73,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Express Session configuration
-const isProd = process.env.NODE_ENV === 'production';
 app.use(
   session({
     name: 'subject_mail_sid',
@@ -80,7 +82,7 @@ app.use(
     cookie: {
       httpOnly: true,
       secure: isProd, // Set true if running over HTTPS
-      sameSite: 'lax',
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     },
   })

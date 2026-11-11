@@ -21,7 +21,8 @@ export default function GoogleSignInCard({ onLoginSuccess, isOAuthConfigured }) 
     try {
       setLoading(true);
       setError(null);
-      const res = await authApi.getAuthUrl();
+      const returnTo = `${window.location.origin}${window.location.pathname}`;
+      const res = await authApi.getAuthUrl(returnTo);
       if (res.data && res.data.url) {
         // Redirect browser to Google's official login & consent screen
         window.location.href = res.data.url;

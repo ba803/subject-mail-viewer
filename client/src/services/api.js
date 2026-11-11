@@ -2,9 +2,9 @@ import axios from 'axios';
 import { clientDemoUser, clientDemoMessages, clientDemoGroups } from './clientDemoData';
 
 // Determine base API URL:
-// In production (e.g. GitHub Pages), VITE_API_URL will point to the deployed backend (e.g., https://your-backend.onrender.com)
+// In production (e.g. GitHub Pages), VITE_API_URL defaults to the deployed Render backend
 // In local development without VITE_API_URL, it defaults to '/api' which is proxied by Vite to http://127.0.0.1:5050
-const rawApiUrl = import.meta.env.VITE_API_URL || '';
+const rawApiUrl = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? 'https://subject-mail-viewer.onrender.com' : '');
 const getBaseApiUrl = () => {
   if (!rawApiUrl) return '/api';
   const clean = rawApiUrl.replace(/\/+$/, '');
@@ -59,7 +59,11 @@ export const authApi = {
       return { data: { isAuthenticated: false, isDemo: false } };
     }
   },
-  getAuthUrl: () => api.get('/auth/url'),
+  getAuthUrl: (returnTo) => {
+    const defaultReturn = typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : '';
+    const redirect = returnTo || defaultReturn;
+    return api.get('/auth/url', { params: redirect ? { redirect_to: redirect } : {} });
+  },
   startDemo: async () => {
     try {
       return await api.post('/auth/demo');

@@ -100,9 +100,20 @@ router.get('/url', (req, res) => {
       });
     }
 
-    const state = Math.random().toString(36).substring(7);
-    req.session.oauthState = state;
-    const url = googleAuthService.getAuthUrl(state);
+    // Determine the return URL: check query param, referer, or default
+    const clientRedirect = req.query.redirect_to || 
+                           (req.headers.referer ? new URL(req.headers.referer).origin + new URL(req.headers.referer).pathname : null) || 
+                           process.env.CLIENT_URL || 
+                           'https://ba803.github.io/subject-mail-viewer';
+    
+    // Encode return URL into state object (safe base64url JSON)
+    const statePayload = Buffer.from(JSON.stringify({
+      nonce: Math.random().toString(36).substring(7),
+      returnTo: clientRedirect
+    })).toString('base64url');
+
+    req.session.oauthState = statePayload;
+    const url = googleAuthService.getAuthUrl(statePayload);
     res.json({ url });
   } catch (err) {
     res.status(500).json({ error: 'Failed to generate auth URL', details: err.message });
@@ -114,15 +125,42 @@ router.get('/url', (req, res) => {
  */
 router.get('/callback', async (req, res) => {
   const { code, state, error } = req.query;
-  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+
+  // Default client URL fallback
+  let clientUrl = process.env.CLIENT_URL || (process.env.NODE_ENV === 'production' ? 'https://ba803.github.io/subject-mail-viewer' : 'http://localhost:5173');
+
+  // Extract returnTo from state if provided
+  if (state) {
+    try {
+      const decoded = JSON.parse(Buffer.from(state, 'base64url').toString('utf8'));
+      if (decoded && decoded.returnTo) {
+        clientUrl = decoded.returnTo;
+      }
+    } catch {
+      // not JSON base64url state, keep default clientUrl
+    }
+  }
+
+  // Helper to safely append query params
+  const appendQuery = (baseUrl, params) => {
+    try {
+      const url = new URL(baseUrl);
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+      return url.toString();
+    } catch {
+      const sep = baseUrl.includes('?') ? '&' : '?';
+      const qs = Object.entries(params).map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`).join('&');
+      return `${baseUrl}${sep}${qs}`;
+    }
+  };
 
   if (error) {
     console.error('Google OAuth error from callback:', error);
-    return res.redirect(`${clientUrl}?auth_error=${encodeURIComponent(error)}`);
+    return res.redirect(appendQuery(clientUrl, { auth_error: error }));
   }
 
   if (!code) {
-    return res.redirect(`${clientUrl}?auth_error=missing_code`);
+    return res.redirect(appendQuery(clientUrl, { auth_error: 'missing_code' }));
   }
 
   try {
@@ -146,11 +184,11 @@ router.get('/callback', async (req, res) => {
       if (err) {
         console.error('Session save error:', err);
       }
-      res.redirect(`${clientUrl}?auth_success=1&token=${sessionToken}`);
+      res.redirect(appendQuery(clientUrl, { auth_success: '1', token: sessionToken }));
     });
   } catch (err) {
     console.error('Failed to exchange auth code:', err);
-    res.redirect(`${clientUrl}?auth_error=${encodeURIComponent(err.message)}`);
+    res.redirect(appendQuery(clientUrl, { auth_error: err.message }));
   }
 });
 
