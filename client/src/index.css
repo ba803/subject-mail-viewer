@@ -34,3 +34,59 @@ body {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Scoped email content rendering (preserves email styling inside Tailwind) */
+.email-content-view {
+  color: #202124;
+  line-height: 1.6;
+  font-size: 0.875rem;
+}
+.email-content-view p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.email-content-view h1 { font-size: 1.35rem; font-weight: 700; margin: 1rem 0 0.5rem; color: #202124; }
+.email-content-view h2 { font-size: 1.2rem; font-weight: 700; margin: 0.875rem 0 0.5rem; color: #202124; }
+.email-content-view h3 { font-size: 1.05rem; font-weight: 600; margin: 0.75rem 0 0.5rem; color: #202124; }
+.email-content-view table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  display: table !important;
+}
+.email-content-view tr { display: table-row !important; }
+.email-content-view td, .email-content-view th {
+  display: table-cell !important;
+  border: 1px solid #dadce0;
+  padding: 8px 12px;
+  vertical-align: top;
+}
+.email-content-view th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+.email-content-view ul {
+  list-style-type: disc !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+.email-content-view ol {
+  list-style-type: decimal !important;
+  padding-left: 1.5rem !important;
+  margin: 0.5rem 0 !important;
+}
+.email-content-view li {
+  display: list-item !important;
+  margin-bottom: 0.25rem;
+}
+.email-content-view a {
+  color: #1a73e8 !important;
+  text-decoration: underline !important;
+  word-break: break-all;
+}
+.email-content-view blockquote {
+  border-left: 3px solid #1a73e8;
+  padding-left: 1rem;
+  margin: 0.75rem 0;
+  color: #5f6368;
+}
+

@@ -222,10 +222,19 @@ function extractLinksFromMessage(message) {
 
 export default function MessageModal({ message, onClose }) {
   const [showRawBody, setShowRawBody] = useState(false);
-  const [rawViewMode, setRawViewMode] = useState('html');
+  const [copiedBody, setCopiedBody] = useState(false);
   const [copiedLinkIdx, setCopiedLinkIdx] = useState(null);
 
   if (!message) return null;
+
+  // Clean detection of whether HTML has real content or is just a short stub
+  const htmlContent = (message.htmlBody || '').trim();
+  const textContent = (message.textBody || message.snippet || '').trim();
+  const htmlPlainText = htmlContent.replace(/<[^>]*>/g, '').trim();
+
+  // If HTML is just a 1-sentence stub while text is long, start in text view
+  const preferText = textContent.length > 80 && htmlPlainText.length < 50;
+  const [rawViewMode, setRawViewMode] = useState(preferText ? 'text' : 'html');
 
   const isGroup = message.source === 'Google Group' || message.isGroup;
 
@@ -655,48 +664,70 @@ export default function MessageModal({ message, onClose }) {
           </div>
 
           {/* ========================================================= */}
-          {/* OPTIONAL TOGGLE: View Full Raw Email Body */}
+          {/* FULL ORIGINAL EMAIL BODY (TOGGLEABLE & EXPANDABLE) */}
           {/* ========================================================= */}
-          <div className="pt-2 border-t border-[#f1f3f4]">
-            <button
-              type="button"
-              onClick={() => setShowRawBody(!showRawBody)}
-              className="flex items-center space-x-1.5 text-xs font-semibold text-gray-500 hover:text-[#1A73E8] transition py-1"
-            >
-              <span>{showRawBody ? 'Hide Original Email Body' : 'View Full Original Email Body'}</span>
-              {showRawBody ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-            </button>
+          <div className="pt-2 border-t border-[#dadce0]">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setShowRawBody(!showRawBody)}
+                className="flex items-center space-x-2 text-xs sm:text-sm font-bold text-[#1A73E8] hover:text-blue-800 transition py-1.5 px-3 rounded-lg hover:bg-blue-50 border border-blue-200"
+              >
+                <FileText className="w-4 h-4" />
+                <span>{showRawBody ? 'Hide Full Original Email' : 'View Full Original Email Body'}</span>
+                {showRawBody ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
 
-            {showRawBody && (
-              <div className="mt-3 p-4 bg-[#f8f9fa] border border-gray-200 rounded-2xl animate-in fade-in">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-bold text-gray-700">Original Email Body</span>
-                  <div className="inline-flex rounded-lg border border-gray-300 p-0.5 bg-white text-[11px]">
+              {showRawBody && (
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(textContent || htmlPlainText);
+                      setCopiedBody(true);
+                      setTimeout(() => setCopiedBody(false), 2000);
+                    }}
+                    className="inline-flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:text-gray-900 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition shadow-2xs"
+                    title="Copy full email text"
+                  >
+                    {copiedBody ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+                    <span>{copiedBody ? 'Copied' : 'Copy Text'}</span>
+                  </button>
+
+                  <div className="inline-flex rounded-lg border border-gray-300 p-0.5 bg-white text-xs shadow-2xs">
                     <button
                       type="button"
                       onClick={() => setRawViewMode('html')}
-                      className={`px-2 py-0.5 rounded ${rawViewMode === 'html' ? 'bg-[#1A73E8] text-white font-semibold' : 'text-gray-600'}`}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                        rawViewMode === 'html' ? 'bg-[#1A73E8] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                      }`}
                     >
-                      HTML
+                      Formatted (HTML)
                     </button>
                     <button
                       type="button"
                       onClick={() => setRawViewMode('text')}
-                      className={`px-2 py-0.5 rounded ${rawViewMode === 'text' ? 'bg-[#1A73E8] text-white font-semibold' : 'text-gray-600'}`}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition ${
+                        rawViewMode === 'text' ? 'bg-[#1A73E8] text-white shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                      }`}
                     >
-                      Text
+                      Plain Text
                     </button>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {rawViewMode === 'html' && message.htmlBody ? (
+            {showRawBody && (
+              <div className="mt-3 p-4 sm:p-5 bg-[#f8f9fa] border border-gray-200 rounded-2xl animate-in fade-in">
+                {rawViewMode === 'html' && (htmlContent.length > 0) ? (
                   <div 
-                    className="prose max-w-none text-xs text-[#202124] overflow-auto max-h-[300px] bg-white p-3 rounded-xl border border-gray-200"
-                    dangerouslySetInnerHTML={{ __html: message.htmlBody }} 
+                    className="email-content-view bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-xs overflow-auto max-h-[600px]"
+                    dangerouslySetInnerHTML={{ __html: htmlContent }} 
                   />
                 ) : (
-                  <pre className="text-xs font-mono whitespace-pre-wrap text-gray-800 leading-relaxed overflow-auto max-h-[300px] bg-white p-3 rounded-xl border border-gray-200">
-                    {message.textBody || message.snippet || '(Empty message body)'}
+                  <pre className="text-xs sm:text-sm font-mono whitespace-pre-wrap text-gray-900 leading-relaxed overflow-auto max-h-[600px] bg-white p-4 sm:p-6 rounded-xl border border-gray-200 shadow-xs">
+                    {textContent || '(No email body content available)'}
                   </pre>
                 )}
               </div>
