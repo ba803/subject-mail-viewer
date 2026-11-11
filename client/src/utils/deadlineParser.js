@@ -1,0 +1,186 @@
+/**
+ * Deadline Parser & Time Remaining Calculator
+ * Supports college placement email registration deadlines, e.g.:
+ * "Registration: All the eligible & interested students are requested to register in the below two links on or before 12.11.2026 - 01.00 PM."
+ * Calculates dynamic time remaining, e.g. "Only 2 days left", "Ends today", "Registration Closed"
+ */
+
+export function parseDeadlineDate(dateStr, timeStr) {
+  if (!dateStr) return null;
+  const cleanDate = dateStr.trim();
+  
+  // DD.MM.YYYY, DD/MM/YYYY, DD-MM-YYYY
+  const dmyMatch = cleanDate.match(/^(\d{1,2})[./-](\d{1,2})[./-](\d{2,4})$/);
+  let day, month, year;
+  if (dmyMatch) {
+    day = parseInt(dmyMatch[1], 10);
+    month = parseInt(dmyMatch[2], 10) - 1;
+    year = parseInt(dmyMatch[3], 10);
+    if (year < 100) year += 2000;
+  } else {
+    const parsed = new Date(cleanDate);
+    if (isNaN(parsed.getTime())) return null;
+    day = parsed.getDate();
+    month = parsed.getMonth();
+    year = parsed.getFullYear();
+  }
+
+  let hours = 23;
+  let minutes = 59;
+  if (timeStr && timeStr.trim()) {
+    const timeMatch = timeStr.trim().match(/(\d{1,2})[:.](\d{2})\s*([apAP][mM])?/i);
+    if (timeMatch) {
+      hours = parseInt(timeMatch[1], 10);
+      minutes = parseInt(timeMatch[2], 10);
+      const meridiem = (timeMatch[3] || '').toUpperCase();
+      if (meridiem === 'PM' && hours < 12) hours += 12;
+      if (meridiem === 'AM' && hours === 12) hours = 0;
+    }
+  }
+
+  const d = new Date(year, month, day, hours, minutes, 0);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+export function getTimeRemaining(deadlineDate) {
+  if (!deadlineDate) return null;
+  const now = new Date();
+  const diffMs = deadlineDate.getTime() - now.getTime();
+
+  if (diffMs <= 0) {
+    return {
+      status: 'expired',
+      badge: 'Registration Closed',
+      text: 'Registration Closed',
+      subtext: 'Deadline has passed',
+      color: 'red',
+      daysLeft: 0,
+      isExpired: true
+    };
+  }
+
+  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const startOfDeadline = new Date(deadlineDate.getFullYear(), deadlineDate.getMonth(), deadlineDate.getDate()).getTime();
+  const calendarDays = Math.round((startOfDeadline - startOfToday) / (1000 * 60 * 60 * 24));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (calendarDays <= 0) {
+    if (diffHours < 1) {
+      const diffMins = Math.max(1, Math.floor(diffMs / (1000 * 60)));
+      return {
+        status: 'urgent',
+        badge: `Only ${diffMins} min${diffMins === 1 ? '' : 's'} left`,
+        text: `Only ${diffMins} minute${diffMins === 1 ? '' : 's'} left!`,
+        subtext: 'Closing very soon',
+        color: 'red',
+        daysLeft: 0,
+        isExpired: false
+      };
+    }
+    return {
+      status: 'urgent',
+      badge: `Ends today (${diffHours}h left)`,
+      text: `Ends today (Only ${diffHours} hour${diffHours === 1 ? '' : 's'} left)`,
+      subtext: 'Closes today',
+      color: 'amber',
+      daysLeft: 0,
+      isExpired: false
+    };
+  }
+
+  if (calendarDays === 1) {
+    return {
+      status: 'warning',
+      badge: 'Only 1 day left',
+      text: 'Only 1 day left',
+      subtext: 'Closing tomorrow',
+      color: 'amber',
+      daysLeft: 1,
+      isExpired: false
+    };
+  }
+
+  if (calendarDays === 2) {
+    return {
+      status: 'warning',
+      badge: 'Only 2 days left',
+      text: 'Only 2 days left',
+      subtext: 'Closing in 2 days',
+      color: 'amber',
+      daysLeft: 2,
+      isExpired: false
+    };
+  }
+
+  if (calendarDays <= 5) {
+    return {
+      status: 'warning',
+      badge: `Only ${calendarDays} days left`,
+      text: `Only ${calendarDays} days left`,
+      subtext: `Closing in ${calendarDays} days`,
+      color: 'amber',
+      daysLeft: calendarDays,
+      isExpired: false
+    };
+  }
+
+  return {
+    status: 'open',
+    badge: `${calendarDays} days left`,
+    text: `${calendarDays} days left`,
+    subtext: 'Registration open',
+    color: 'emerald',
+    daysLeft: calendarDays,
+    isExpired: false
+  };
+}
+
+export function extractRegistrationDeadline(message) {
+  if (!message) return null;
+
+  const rawText = `${message.textBody || ''}\n${message.snippet || ''}`;
+  const rawHtml = message.htmlBody ? message.htmlBody.replace(/<[^>]*>/g, ' ') : '';
+  const fullText = `${rawText}\n${rawHtml}`;
+
+  // Pattern 1: Registration: ... on or before 12.11.2026 - 01.00 PM
+  const regPattern1 = /(?:registration|register)\s*[:\-]?\s*([^\n\r]*?(?:on or before|before|by|till|until)\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+  
+  // Pattern 2: Last date for registration / End date for applying: 12.11.2026 - 01.00 PM
+  const regPattern2 = /((?:last date|end date|deadline|apply before|registration deadline|application deadline)\s*(?:for registration|to apply|to register|for applying|of registration)?\s*[:\-]?\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+
+  // Pattern 3: general on or before
+  const regPattern3 = /((?:[^\n\r]*?register[^\n\r]*?)?on or before\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+
+  let match = fullText.match(regPattern1) || fullText.match(regPattern2) || fullText.match(regPattern3);
+
+  let instruction = '';
+  let rawDeadline = '';
+
+  if (match) {
+    instruction = match[1].trim();
+    rawDeadline = match[2].trim();
+  } else if (message.registrationDeadline) {
+    rawDeadline = message.registrationDeadline;
+    instruction = message.registrationInstruction || `Register on or before ${rawDeadline}`;
+  } else {
+    return null;
+  }
+
+  const dMatch = rawDeadline.match(/^([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4})(?:\s*[-–@,]\s*([0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?))?/);
+  if (!dMatch) return null;
+
+  const datePart = dMatch[1];
+  const timePart = dMatch[2] || '';
+  const parsedDate = parseDeadlineDate(datePart, timePart);
+  const remaining = getTimeRemaining(parsedDate);
+
+  return {
+    instruction,
+    rawDeadline,
+    datePart,
+    timePart,
+    parsedDate,
+    remaining
+  };
+}
+

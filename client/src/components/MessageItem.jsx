@@ -1,8 +1,13 @@
-import React from 'react';
-import { Mail, Users, Paperclip, ChevronRight, Calendar } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Mail, Users, Paperclip, ChevronRight, Calendar, Clock } from 'lucide-react';
+import { extractRegistrationDeadline } from '../utils/deadlineParser';
 
 export default function MessageItem({ message, onClick, searchTerm = '' }) {
   const isGroup = message.source === 'Google Group' || message.isGroup;
+
+  const deadlineInfo = useMemo(() => {
+    return extractRegistrationDeadline(message);
+  }, [message]);
 
   // Format date
   const formatDate = (dateStr, timestamp) => {
@@ -91,6 +96,23 @@ export default function MessageItem({ message, onClick, searchTerm = '' }) {
             {message.hasAttachments && (
               <span className="inline-flex items-center text-xs text-gray-500" title="Has attachment(s)">
                 <Paperclip className="w-3.5 h-3.5" />
+              </span>
+            )}
+
+            {/* Registration Deadline Pill */}
+            {deadlineInfo && deadlineInfo.remaining && (
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${
+                  deadlineInfo.remaining.color === 'red'
+                    ? 'bg-red-100 text-red-800 border border-red-200'
+                    : deadlineInfo.remaining.color === 'amber'
+                    ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                    : 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                }`}
+                title={`Registration Deadline: ${deadlineInfo.rawDeadline}`}
+              >
+                <Clock className="w-3 h-3 mr-1" />
+                {deadlineInfo.remaining.badge}
               </span>
             )}
           </div>

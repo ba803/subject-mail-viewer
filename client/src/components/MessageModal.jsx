@@ -26,6 +26,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { mailApi } from '../services/api';
+import { extractRegistrationDeadline } from '../utils/deadlineParser';
 
 /**
  * Automatically extracts Eligibility Criteria key-value pairs from placement emails
@@ -228,6 +229,11 @@ export default function MessageModal({ message, onClose }) {
 
   const isGroup = message.source === 'Google Group' || message.isGroup;
 
+  // Extract Registration Deadline / End Date for Applying
+  const deadlineInfo = useMemo(() => {
+    return extractRegistrationDeadline(message);
+  }, [message]);
+
   // 1. Extract Eligibility Criteria
   const eligibilityCriteria = useMemo(() => {
     return extractEligibilityCriteria(message);
@@ -349,6 +355,61 @@ export default function MessageModal({ message, onClose }) {
 
         {/* Modal Scrollable Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-white space-y-6">
+
+          {/* ========================================================= */}
+          {/* END DATE FOR APPLYING / REGISTRATION DEADLINE (CRITICAL) */}
+          {/* ========================================================= */}
+          {deadlineInfo && (
+            <div className={`p-4 sm:p-5 rounded-2xl border-2 shadow-xs transition-all ${
+              deadlineInfo.remaining.color === 'red'
+                ? 'bg-gradient-to-r from-red-50 via-rose-50/70 to-white border-red-300 text-red-950'
+                : deadlineInfo.remaining.color === 'amber'
+                ? 'bg-gradient-to-r from-amber-50 via-orange-50/60 to-white border-amber-300 text-amber-950'
+                : 'bg-gradient-to-r from-emerald-50 via-teal-50/60 to-white border-emerald-300 text-emerald-950'
+            }`}>
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-2.5">
+                <div className="flex items-center space-x-3">
+                  <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold shadow-xs ${
+                    deadlineInfo.remaining.color === 'red'
+                      ? 'bg-red-200/90 text-red-800'
+                      : deadlineInfo.remaining.color === 'amber'
+                      ? 'bg-amber-200/90 text-amber-900'
+                      : 'bg-emerald-200/90 text-emerald-900'
+                  }`}>
+                    <Clock className="w-5 h-5 animate-pulse" />
+                  </div>
+                  <div>
+                    <span className="text-[11px] font-bold uppercase tracking-wider block opacity-75">
+                      End Date for Applying
+                    </span>
+                    <span className="text-base sm:text-lg font-extrabold tracking-tight">
+                      {deadlineInfo.rawDeadline}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Dynamic Countdown Badge (e.g. "Only 2 days left") */}
+                <div className={`inline-flex items-center px-3.5 py-1.5 rounded-full text-xs font-black shadow-sm tracking-wide ${
+                  deadlineInfo.remaining.color === 'red'
+                    ? 'bg-red-600 text-white'
+                    : deadlineInfo.remaining.color === 'amber'
+                    ? 'bg-amber-500 text-white ring-2 ring-amber-300 animate-pulse'
+                    : 'bg-emerald-600 text-white'
+                }`}>
+                  <span className="mr-1.5 text-sm">⏳</span>
+                  {deadlineInfo.remaining.text}
+                </div>
+              </div>
+
+              {/* Detailed Registration Instruction */}
+              {deadlineInfo.instruction && (
+                <div className="mt-2.5 pt-2.5 border-t border-current/15 text-xs sm:text-sm font-medium leading-relaxed opacity-95">
+                  <span className="font-bold mr-1.5">Registration:</span>
+                  <span>{deadlineInfo.instruction}</span>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* ========================================================= */}
           {/* 1. ELIGIBILITY CRITERIA (PRIMARY SECTION) */}

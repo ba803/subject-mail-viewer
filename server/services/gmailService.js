@@ -397,6 +397,27 @@ class GmailService {
   }
 
   /**
+   * Automatically extracts Registration Deadline & Instruction from placement emails
+   */
+  extractRegistrationDeadline(textBody = '', htmlBody = '', snippet = '') {
+    const rawText = `${textBody || ''}\n${snippet || ''}`;
+    const rawHtml = htmlBody ? htmlBody.replace(/<[^>]*>/g, ' ') : '';
+    const fullText = `${rawText}\n${rawHtml}`;
+
+    const regPattern1 = /(?:registration|register)\s*[:\-]?\s*([^\n\r]*?(?:on or before|before|by|till|until)\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+    const regPattern2 = /((?:last date|end date|deadline|apply before|registration deadline|application deadline)\s*(?:for registration|to apply|to register|for applying|of registration)?\s*[:\-]?\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+    const regPattern3 = /((?:[^\n\r]*?register[^\n\r]*?)?on or before\s*([0-9]{1,2}[./-][0-9]{1,2}[./-][0-9]{2,4}(?:\s*[-–@,]\s*[0-9]{1,2}[:.][0-9]{2}(?:\s*[apAP][mM])?)?)[^\n\r]*)/i;
+
+    const match = fullText.match(regPattern1) || fullText.match(regPattern2) || fullText.match(regPattern3);
+    if (!match) return null;
+
+    return {
+      instruction: match[1].trim(),
+      deadline: match[2].trim()
+    };
+  }
+
+  /**
    * Format Gmail raw message into clean Subject Mail Viewer message object
    */
   formatMessage(rawMessage) {
@@ -418,6 +439,7 @@ class GmailService {
     const { textBody, htmlBody, attachments } = this.parseMessageParts(payload, rawMessage.id);
     const eligibilityCriteria = this.extractEligibilityCriteria(textBody, htmlBody);
     const links = this.extractLinks(textBody, htmlBody);
+    const deadlineResult = this.extractRegistrationDeadline(textBody, htmlBody, rawMessage.snippet);
 
     return {
       id: rawMessage.id,
@@ -438,6 +460,8 @@ class GmailService {
       attachments,
       eligibilityCriteria,
       links,
+      registrationDeadline: deadlineResult ? deadlineResult.deadline : null,
+      registrationInstruction: deadlineResult ? deadlineResult.instruction : null,
       labels: rawMessage.labelIds || []
     };
   }

@@ -68,6 +68,9 @@ Eligibility         : (1) A Minimum of 60% or 6 CGPA in the present degree.
 Internship Stipend  : 15 k/month
 CTC                 : 5.5 LPA - 7.0 LPA
 
+Registration:
+All the eligible & interested students are requested to register in the below two links on or before 14.11.2026 - 01.00 PM.
+
 Registration Links:
 Placement link: https://placement.sathyabama.ac.in/apply/crmit-2027
 Visit: https://neopat.in/login

@@ -70,6 +70,9 @@ Eligibility         : (1) A Minimum of 60% or 6 CGPA in the present degree.
 Internship Stipend  : 15 k/month
 CTC                 : 5.5 LPA - 7.0 LPA
 
+Registration:
+All the eligible & interested students are requested to register in the below two links on or before 14.11.2026 - 01.00 PM.
+
 Registration Links:
 Placement link: https://placement.sathyabama.ac.in/apply/crmit-2027
 Visit: https://neopat.in/login
@@ -90,6 +93,10 @@ Sathyabama Institute of Science and Technology`,
 <strong>Eligibility:</strong> (1) A Minimum of 60% or 6 CGPA in present degree. (2) No standing Arrears<br/>
 <strong>Internship Stipend:</strong> 15 k/month<br/>
 <strong>CTC:</strong> 5.5 LPA - 7.0 LPA</p>
+<p style="background: #fef3c7; padding: 10px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+<strong>Registration:</strong><br/>
+All the eligible & interested students are requested to register in the below two links on or before 14.11.2026 - 01.00 PM.
+</p>
 <p>Placement link: <a href="https://placement.sathyabama.ac.in/apply/crmit-2027">https://placement.sathyabama.ac.in/apply/crmit-2027</a><br/>
 Visit: <a href="https://neopat.in/login">https://neopat.in/login</a><br/>
 Company link: <a href="https://crmit.com">https://crmit.com</a></p>
@@ -143,11 +150,27 @@ Eligibility         : (1) A Minimum of 60% or 6 CGPA in the present degree.
 Internship Stipend  : 10 k/month
 CTC                 : 3.6 LPA
 
+Registration:
+All the eligible & interested students are requested to register in the below two links on or before 13.11.2026 - 05.00 PM.
+
 Links:
 Company link: https://trikaaltech.com
 Placement link: https://placement.sathyabama.ac.in/trikaal-tech-2027
 Visit: https://neopat.in/student`,
-    htmlBody: `<p>Campus Recruitment Notification from Trikaal Tech Enterprises.</p>`,
+    htmlBody: `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+<p>Campus Recruitment Notification from <strong>Trikaal Tech Enterprises</strong>.</p>
+<p><strong>Company Name:</strong> Trikaal Tech Enterprises<br/>
+<strong>Eligible branches:</strong> M.E/M.Tech - Structural Engineering<br/>
+<strong>Internship Stipend:</strong> 10 k/month<br/>
+<strong>CTC:</strong> 3.6 LPA</p>
+<p style="background: #fef3c7; padding: 10px; border-left: 4px solid #f59e0b; border-radius: 4px;">
+<strong>Registration:</strong><br/>
+All the eligible & interested students are requested to register in the below two links on or before 13.11.2026 - 05.00 PM.
+</p>
+<p>Company link: <a href="https://trikaaltech.com">https://trikaaltech.com</a><br/>
+Placement link: <a href="https://placement.sathyabama.ac.in/trikaal-tech-2027">https://placement.sathyabama.ac.in/trikaal-tech-2027</a><br/>
+Visit: <a href="https://neopat.in/student">https://neopat.in/student</a></p>
+</div>`,
     labels: ['INBOX']
   },
   {
@@ -191,7 +214,10 @@ Venue: Online Assessment (NeoPat Platform)
 Eligible branches: All Circuit Branches (CSE, IT, AI&DS, ECE, EEE)
 Eligibility: 60% throughout 10th, 12th, and UG with no standing arrears
 Internship Stipend: 12 k/month
-CTC: 4.0 LPA - 6.0 LPA`,
+CTC: 4.0 LPA - 6.0 LPA
+
+Registration:
+All the eligible & interested students are requested to register in the below two links on or before 16.11.2026 - 11.59 PM.`,
     htmlBody: `<p>Online Assessment notice for Hexaware.</p>`,
     labels: ['INBOX', 'IMPORTANT']
   },
