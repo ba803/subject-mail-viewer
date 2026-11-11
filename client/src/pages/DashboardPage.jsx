@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Mail, 
   Users, 
@@ -7,16 +7,19 @@ import {
   RefreshCw, 
   Sparkles, 
   CheckCircle2, 
-  Layers,
-  ChevronRight,
-  TrendingUp,
-  Tag
+  Layers, 
+  ChevronRight, 
+  TrendingUp, 
+  Tag,
+  Clock,
+  AlertTriangle
 } from 'lucide-react';
 import StatsCards from '../components/StatsCards';
 import SubjectSearchBox from '../components/SubjectSearchBox';
 import MessageItem from '../components/MessageItem';
 import MessageModal from '../components/MessageModal';
 import { mailApi } from '../services/api';
+import { extractRegistrationDeadline } from '../utils/deadlineParser';
 
 export default function DashboardPage({ 
   user, 
@@ -36,7 +39,7 @@ export default function DashboardPage({
       setLoading(true);
       const [statsRes, searchRes, groupsRes] = await Promise.all([
         mailApi.getStats(subject),
-        mailApi.search({ subject, maxResults: 5 }),
+        mailApi.search({ subject, maxResults: 20 }),
         mailApi.getGroups()
       ]);
 
@@ -57,6 +60,14 @@ export default function DashboardPage({
       setLoading(false);
     }
   };
+
+  // Filter messages whose registration deadline is within 1 day (urgent)
+  const oneDayMessages = useMemo(() => {
+    return recentMessages.filter((msg) => {
+      const d = extractRegistrationDeadline(msg);
+      return d && d.remaining && d.remaining.daysLeft <= 1 && !d.remaining.isExpired;
+    });
+  }, [recentMessages]);
 
   useEffect(() => {
     fetchDashboardData(activeSubject || 'Campus Recruitment');
@@ -122,6 +133,93 @@ export default function DashboardPage({
         initialSubject={activeSubject || 'Campus Recruitment'} 
         loading={loading} 
       />
+
+      {/* ========================================================= */}
+      {/* SECTION: BEFORE ONE DAY APPLICATIONS (CLOSING IN 1 DAY) */}
+      {/* ========================================================= */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-3.5">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold shadow-2xs">
+              <Clock className="w-4 h-4 animate-pulse text-amber-700" />
+            </div>
+            <div>
+              <h2 className="text-base sm:text-lg font-bold text-[#202124] flex items-center">
+                <span>Before 1 Day Applications</span>
+                <span className="ml-2.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-100 text-amber-900 border border-amber-300">
+                  {oneDayMessages.length} Urgent
+                </span>
+              </h2>
+              <p className="text-xs text-gray-500">
+                Placement drives closing within 1 day (tomorrow / today)
+              </p>
+            </div>
+          </div>
+
+          {oneDayMessages.length > 0 && (
+            <button
+              onClick={() => onNavigateToMessages()}
+              className="text-xs font-semibold text-amber-800 hover:text-amber-950 flex items-center space-x-1"
+            >
+              <span>View in Inbox</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {oneDayMessages.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {oneDayMessages.map((msg) => {
+              const d = extractRegistrationDeadline(msg);
+              return (
+                <div
+                  key={msg.id}
+                  onClick={() => setSelectedMessage(msg)}
+                  className="p-4 sm:p-5 rounded-2xl border-2 border-amber-300 bg-gradient-to-br from-amber-50/90 via-orange-50/40 to-white shadow-xs hover:shadow-md transition-all cursor-pointer group"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[11px] font-bold text-amber-800 uppercase tracking-wider block mb-0.5">
+                        {msg.eligibilityCriteria?.['Company Name'] || 'Placement Notification'}
+                      </span>
+                      <h3 className="font-bold text-sm sm:text-base text-gray-900 group-hover:text-[#1A73E8] transition line-clamp-1">
+                        {msg.subject}
+                      </h3>
+                    </div>
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black bg-amber-500 text-white shadow-xs animate-pulse flex-shrink-0">
+                      ⏳ {d?.remaining?.text || 'Only 1 day left'}
+                    </span>
+                  </div>
+
+                  {d?.instruction && (
+                    <p className="text-xs text-amber-950 font-medium line-clamp-2 mb-3 bg-white/90 p-2.5 rounded-xl border border-amber-200/80 shadow-2xs">
+                      {d.instruction}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between text-xs text-gray-600 pt-2 border-t border-amber-200/60">
+                    <span className="font-semibold text-gray-800">
+                      Deadline: <span className="text-amber-900 font-bold">{d?.rawDeadline || 'Within 1 day'}</span>
+                    </span>
+                    <span className="text-[#1A73E8] font-bold group-hover:translate-x-1 transition flex items-center">
+                      <span>View &amp; Apply</span>
+                      <ChevronRight className="w-4 h-4 ml-0.5" />
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 flex items-center space-x-3 text-xs text-emerald-900">
+            <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+            <div>
+              <span className="font-bold">No applications closing within 1 day.</span>
+              <p className="text-emerald-700 mt-0.5">All your active recruitment drives have more than 1 day remaining.</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Grid: Recent Matching Messages Preview & Google Groups widget */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

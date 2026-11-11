@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Mail, 
   Users, 
@@ -6,19 +6,21 @@ import {
   Filter, 
   Search, 
   Info, 
-  AlertCircle,
-  FileQuestion,
-  ChevronDown,
-  Download,
-  FileSpreadsheet,
-  FileCode,
-  Share2
+  AlertCircle, 
+  FileQuestion, 
+  ChevronDown, 
+  Download, 
+  FileSpreadsheet, 
+  FileCode, 
+  Share2,
+  Clock
 } from 'lucide-react';
 import SubjectSearchBox from '../components/SubjectSearchBox';
 import MessageItem from '../components/MessageItem';
 import MessageModal from '../components/MessageModal';
 import RefreshBar from '../components/RefreshBar';
 import { mailApi } from '../services/api';
+import { extractRegistrationDeadline } from '../utils/deadlineParser';
 
 export default function MessagesPage({ 
   initialFilters = {}, 
@@ -93,10 +95,21 @@ export default function MessagesPage({
     executeSearch(currentFilters, true);
   };
 
+  const oneDayMessagesCount = useMemo(() => {
+    return messages.filter((m) => {
+      const d = extractRegistrationDeadline(m);
+      return d && d.remaining && d.remaining.daysLeft <= 1 && !d.remaining.isExpired;
+    }).length;
+  }, [messages]);
+
   // Filter messages based on activeSourceTab in UI
   const filteredMessages = messages.filter((msg) => {
     if (activeSourceTab === 'gmail') return msg.source === 'Gmail';
     if (activeSourceTab === 'group') return msg.source === 'Google Group';
+    if (activeSourceTab === 'one-day') {
+      const d = extractRegistrationDeadline(msg);
+      return d && d.remaining && d.remaining.daysLeft <= 1 && !d.remaining.isExpired;
+    }
     return true;
   });
 
@@ -262,12 +275,47 @@ export default function MessagesPage({
                 {groupCount}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => handleSourceTabChange('one-day')}
+              className={`flex items-center space-x-2 px-3.5 py-2.5 border-b-2 text-xs sm:text-sm font-bold transition ${
+                activeSourceTab === 'one-day'
+                  ? 'border-amber-500 text-amber-900 bg-amber-50/70'
+                  : 'border-transparent text-amber-800 hover:text-amber-950 hover:bg-amber-50/30'
+              }`}
+            >
+              <Clock className="w-4 h-4 text-amber-600 animate-pulse" />
+              <span>Before 1 Day Applications</span>
+              <span className="ml-1 px-1.5 py-0.5 rounded-full text-[11px] bg-amber-200 text-amber-950 font-black border border-amber-300">
+                {oneDayMessagesCount}
+              </span>
+            </button>
           </div>
 
           <div className="text-xs text-[#5f6368] pb-2 sm:pb-0">
             Showing <strong className="text-[#202124]">{filteredMessages.length}</strong> matching emails
           </div>
         </div>
+
+        {/* Banner for Before 1 Day Applications Tab */}
+        {activeSourceTab === 'one-day' && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 text-xs text-amber-950 flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-amber-600 animate-pulse flex-shrink-0" />
+              <span>
+                Showing <strong>Before 1 Day Applications</strong> — recruitment drives whose deadline is closing within 1 day (tomorrow / today).
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleSourceTabChange('all')}
+              className="text-amber-800 underline font-semibold hover:text-amber-950 ml-2"
+            >
+              Show All Messages
+            </button>
+          </div>
+        )}
 
         {/* Message List */}
         <div className="divide-y divide-[#f1f3f4] min-h-[300px]">
@@ -287,6 +335,25 @@ export default function MessagesPage({
                 searchTerm={currentFilters.subject}
               />
             ))
+          ) : activeSourceTab === 'one-day' ? (
+            <div className="p-12 text-center">
+              <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8" />
+              </div>
+              <h3 className="text-base font-bold text-[#202124] mb-1">
+                No applications closing within 1 day
+              </h3>
+              <p className="text-xs sm:text-sm text-[#5f6368] max-w-md mx-auto mb-4">
+                You have no placement drives closing tomorrow. All active deadlines have more time remaining.
+              </p>
+              <button
+                type="button"
+                onClick={() => handleSourceTabChange('all')}
+                className="px-4 py-2 bg-[#1A73E8] text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition"
+              >
+                View Unified All Messages
+              </button>
+            </div>
           ) : (
             <div className="p-12 text-center">
               <div className="w-16 h-16 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-4">
