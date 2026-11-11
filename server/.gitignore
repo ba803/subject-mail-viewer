@@ -1,0 +1,9 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.local
+data/
+sessions.json
+*.log
+npm-debug.log*
