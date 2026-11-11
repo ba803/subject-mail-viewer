@@ -191,13 +191,7 @@ export default function DashboardPage({
                     </span>
                   </div>
 
-                  {d?.instruction && (
-                    <p className="text-xs text-amber-950 font-medium line-clamp-2 mb-3 bg-white/90 p-2.5 rounded-xl border border-amber-200/80 shadow-2xs">
-                      {d.instruction}
-                    </p>
-                  )}
-
-                  <div className="flex items-center justify-between text-xs text-gray-600 pt-2 border-t border-amber-200/60">
+                  <div className="flex items-center justify-between text-xs text-gray-600 pt-2 border-t border-amber-200/60 mt-2">
                     <span className="font-semibold text-gray-800">
                       Deadline: <span className="text-amber-900 font-bold">{d?.rawDeadline || 'Within 1 day'}</span>
                     </span>
